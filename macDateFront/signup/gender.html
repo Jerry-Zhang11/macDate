@@ -1,0 +1,183 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gender - MacDate</title>
+    <link rel="stylesheet" href="../css/index.css">
+    <style>
+        .gender-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 420px;
+            max-width: 90vw;
+            padding: 40px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .gender-title {
+            font-size: 3em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 32px;
+        }
+
+        .gender-options {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .gender-btn {
+            width: 100%;
+            padding: 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            background: white;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #333;
+        }
+
+        .gender-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .gender-btn.selected {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .continue-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .continue-btn.enabled {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .continue-btn.enabled:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="background-animation">
+        <div class="floating-shapes">
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+    </div>
+
+    <div class="gender-container">
+        <h1 class="gender-title">What's Your Gender?</h1>
+        
+        <div class="gender-options">
+            <button type="button" class="gender-btn" data-gender="woman">
+                👩 Woman
+            </button>
+            <button type="button" class="gender-btn" data-gender="man">
+                👨 Man
+            </button>
+        </div>
+
+        <button type="button" class="continue-btn" id="continueBtn">Continue</button>
+    </div>
+
+    <script src="https://unpkg.com/jwt-decode@3.1.2/build/jwt-decode.js"></script>
+    <script>
+        let selectedGender = null;
+        const genderButtons = document.querySelectorAll('.gender-btn');
+        const continueBtn = document.getElementById('continueBtn');
+
+        // Handle gender selection
+        genderButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove selected class from all buttons
+                genderButtons.forEach(btn => btn.classList.remove('selected'));
+                
+                // Add selected class to clicked button
+                this.classList.add('selected');
+                
+                // Store selected gender
+                selectedGender = this.getAttribute('data-gender');
+                
+                // Enable continue button
+                continueBtn.classList.add('enabled');
+            });
+        });
+
+        // Handle continue button click
+        continueBtn.addEventListener('click', async function() {
+            if (!selectedGender) {
+                alert('Please select your gender to continue');
+                return;
+            }
+
+            // Store gender selection
+            try {
+                const authData = JSON.parse(localStorage.getItem('auth'));
+                const token = authData.token;
+                const decodedToken = jwt_decode(token);
+                const email = decodedToken.sub;
+                
+                // Convert selectedGender to uppercase enum format (WOMAN/MAN)
+                const gender = selectedGender.toUpperCase();
+                
+                const response = await fetch('/api/signup/gender', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        gender: gender
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Gender saved successfully!');
+                    // Redirect to next step
+                    window.location.href = 'b-day.html';
+                } else {
+                    const errorData = await response.json();
+                    alert('Failed to save gender: ' + (errorData.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error saving gender:', error);
+                alert('Network error. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>

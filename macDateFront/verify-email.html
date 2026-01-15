@@ -1,0 +1,124 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email - MacDate</title>
+    <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+    <div class="background-animation">
+        <div class="floating-shapes">
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+    </div>
+
+    <div class="auth-container">
+        <div class="logo">
+            <h1>MacDate</h1>
+            <p>Verify your email</p>
+        </div>
+
+        <div class="verification-content">
+            <div class="verification-icon">
+                📧
+            </div>
+            <h2>Enter verification code</h2>
+            <p>We've sent a verification code to <strong id="userEmail"></strong></p>
+            <p>Enter the 6-digit code from your email below:</p>
+            
+            <form id="verificationForm">
+                <div class="form-group">
+                    <input type="text" id="verificationCode" placeholder="Enter 6-digit code" maxlength="6" required>
+                </div>
+                <button type="submit" class="auth-btn">Verify Account</button>
+            </form>
+            
+            <div class="verification-actions">
+                <button class="auth-btn secondary" onclick="resendEmail()">Resend Code</button>
+                <p class="back-link">
+                    <a href="index.html">← Back to Sign In</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Extract email from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const email = urlParams.get('email');
+        
+        if (email) {
+            document.getElementById('userEmail').textContent = email;
+        }
+
+        // Handle verification form submission
+        document.getElementById('verificationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const code = document.getElementById('verificationCode').value;
+            const email = urlParams.get('email');
+            
+            if (code.length !== 6) {
+                alert('Please enter a 6-digit verification code.');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        verificationCode: code
+                    })
+                });
+                
+                const data = await response.text();
+                
+                if (response.ok) {
+                    alert('Email verified successfully!');
+                    // Redirect to sign in page
+                    window.location.href = 'index.html';
+                } else {
+                    alert(data.message || 'Verification failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Verification error:', error);
+                alert('Network error. Please check your connection and try again.');
+            }
+        });
+
+        function resendEmail() {
+            const email = urlParams.get('email');
+            
+            if (!email) {
+                alert('No email found. Please go back and sign up again.');
+                return;
+            }
+            
+            // Implement resend verification email logic
+            fetch('http://localhost:8080/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email: email })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Verification code resent to your email!');
+            })
+            .catch(error => {
+                console.error('Resend error:', error);
+                alert('Failed to resend code. Please try again.');
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MacDate - It's a Match!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo h1 {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .match-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px 100px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .match-banner {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fadeInScale 0.6s ease-out;
+        }
+
+        @keyframes fadeInScale {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .match-banner h1 {
+            color: white;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .match-banner p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .profile-card {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.6s ease-out 0.2s both;
+        }
+
+        @keyframes slideUp {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .image-carousel {
+            position: relative;
+            width: 100%;
+            height: 450px;
+            overflow: hidden;
+        }
+
+        .carousel-image {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .carousel-image.active {
+            opacity: 1;
+        }
+
+        .carousel-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .profile-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            font-size: 6rem;
+            color: white;
+        }
+
+        .image-nav {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            gap: 5px;
+            z-index: 10;
+        }
+
+        .nav-dot {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 2px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background: white;
+        }
+
+        .carousel-arrows {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 15px;
+            z-index: 10;
+        }
+
+        .carousel-arrow {
+            background: rgba(0, 0, 0, 0.4);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.3s ease;
+        }
+
+        .carousel-arrow:hover {
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .profile-info {
+            padding: 25px;
+            text-align: center;
+        }
+
+        .profile-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .profile-details {
+            color: #666;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .message-button {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 400px;
+            padding: 18px 40px;
+            background: linear-gradient(135deg, #42dca3 0%, #36b890 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(66, 220, 163, 0.4);
+            transition: all 0.3s ease;
+            z-index: 100;
+            animation: fadeIn 0.6s ease-out 0.4s both;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .message-button:hover {
+            transform: translateX(-50%) translateY(-3px);
+            box-shadow: 0 15px 40px rgba(66, 220, 163, 0.5);
+        }
+
+        .message-button:active {
+            transform: translateX(-50%) translateY(-1px);
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #ffd700;
+            position: absolute;
+            animation: confettiFall 3s linear forwards;
+            z-index: 1000;
+        }
+
+        @keyframes confettiFall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .match-banner h1 {
+                font-size: 2.5rem;
+            }
+
+            .match-banner p {
+                font-size: 1rem;
+            }
+
+            .image-carousel {
+                height: 400px;
+            }
+
+            .profile-name {
+                font-size: 1.5rem;
+            }
+
+            .message-button {
+                font-size: 1.1rem;
+                padding: 16px 35px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <button class="back-btn" onclick="goBack()" title="Back">←</button>
+        <div class="logo">
+            <h1>MacDate</h1>
+        </div>
+        <div style="width: 40px;"></div>
+    </header>
+
+    <div class="match-container">
+        <div class="match-banner">
+            <h1>🎉 It's a Match! 🎉</h1>
+            <p>You and <span id="matchName"></span> liked each other</p>
+        </div>
+
+        <div class="profile-card">
+            <div class="image-carousel">
+                <div class="image-nav" id="imageNav">
+                    <!-- Navigation dots will be dynamically added -->
+                </div>
+
+                <div class="carousel-arrows">
+                    <button class="carousel-arrow" onclick="previousImage()">‹</button>
+                    <button class="carousel-arrow" onclick="nextImage()">›</button>
+                </div>
+
+                <div id="carouselImages">
+                    <!-- Images will be dynamically loaded -->
+                </div>
+            </div>
+
+            <div class="profile-info">
+                <div class="profile-name" id="profileName">Sarah, 21</div>
+                <div class="profile-details" id="profileDetails">
+                    Computer Science • Coffee enthusiast ☕
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="message-button" onclick="openChat()">
+        💬 Send a Message
+    </button>
+
+    <script>
+        let currentImageIndex = 0;
+        let matchData = {
+            name: localStorage.getItem("swipeeName"),
+            age: localStorage.getItem("swipeeAge"),
+            photos: JSON.parse(localStorage.getItem("swipeePhotos"))
+        };
+
+        // Create confetti effect on page load
+        function createConfetti() {
+            const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#ff9ff3'];
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                    confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 30);
+            }
+        }
+
+        function loadMatchData() {
+            // Update match banner
+            document.getElementById('matchName').textContent = matchData.name;
+            
+            // Update profile info
+            document.getElementById('profileName').textContent = `${matchData.name}, ${matchData.age}`;
+            document.getElementById('profileDetails').textContent = matchData.bio;
+
+            // Load images
+            const carouselContainer = document.getElementById('carouselImages');
+            const navContainer = document.getElementById('imageNav');
+            
+            carouselContainer.innerHTML = '';
+            navContainer.innerHTML = '';
+
+            if (matchData.photos && matchData.photos.length > 0) {
+                matchData.photos.forEach((photo, index) => {
+                    // Create image element
+                    const imageDiv = document.createElement('div');
+                    imageDiv.className = `carousel-image ${index === 0 ? 'active' : ''}`;
+                    imageDiv.innerHTML = `<img src="${photo}" alt="${matchData.name}'s photo ${index + 1}" onerror="this.parentNode.innerHTML='<div class=\\'profile-placeholder\\'>📷</div>'">`;
+                    carouselContainer.appendChild(imageDiv);
+
+                    // Create nav dot
+                    const dot = document.createElement('div');
+                    dot.className = `nav-dot ${index === 0 ? 'active' : ''}`;
+                    dot.onclick = () => showImage(index);
+                    navContainer.appendChild(dot);
+                });
+            } else {
+                // Fallback placeholder
+                const placeholderDiv = document.createElement('div');
+                placeholderDiv.className = 'carousel-image active';
+                placeholderDiv.innerHTML = '<div class="profile-placeholder">👤</div>';
+                carouselContainer.appendChild(placeholderDiv);
+            }
+        }
+
+        function showImage(index) {
+            const images = document.querySelectorAll('.carousel-image');
+            const dots = document.querySelectorAll('.nav-dot');
+            
+            images.forEach(img => img.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+            
+            if (images[index] && dots[index]) {
+                images[index].classList.add('active');
+                dots[index].classList.add('active');
+                currentImageIndex = index;
+            }
+        }
+
+        function nextImage() {
+            const images = document.querySelectorAll('.carousel-image');
+            const nextIndex = (currentImageIndex + 1) % images.length;
+            showImage(nextIndex);
+        }
+
+        function previousImage() {
+            const images = document.querySelectorAll('.carousel-image');
+            const prevIndex = (currentImageIndex - 1 + images.length) % images.length;
+            showImage(prevIndex);
+        }
+
+        function openChat() {
+            console.log('Opening chat with:', matchData.name);
+            // Add your chat navigation logic here
+            alert(`Starting chat with ${matchData.name}!`);
+        }
+
+        function goBack() {
+            console.log('Going back to home');
+            // Add your navigation logic here
+            window.history.back();
+        }
+
+        // Touch swipe support for images
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMatchData();
+            createConfetti();
+
+            const carousel = document.querySelector('.image-carousel');
+            
+            carousel.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+            });
+
+            carousel.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].clientX;
+                handleSwipe();
+            });
+
+            function handleSwipe() {
+                const swipeThreshold = 50;
+                const diff = touchStartX - touchEndX;
+
+                if (Math.abs(diff) > swipeThreshold) {
+                    if (diff > 0) {
+                        nextImage();
+                    } else {
+                        previousImage();
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

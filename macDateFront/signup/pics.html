@@ -1,0 +1,359 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Photos - MacDate</title>
+    <link rel="stylesheet" href="../css/index.css">
+    <style>
+        .pics-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 500px;
+            max-width: 90vw;
+            padding: 40px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .pics-title {
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+        }
+
+        .pics-subtitle {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 32px;
+        }
+
+        .pics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .pic-slot {
+            aspect-ratio: 1;
+            border: 2px dashed #e1e5e9;
+            border-radius: 12px;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .pic-slot:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .pic-slot.has-image {
+            border-style: solid;
+            border-color: #667eea;
+        }
+
+        .pic-slot input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .pic-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .pic-placeholder {
+            color: #999;
+            font-size: 1.5em;
+            margin-bottom: 4px;
+        }
+
+        .pic-text {
+            color: #666;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .pic-remove {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            color: #ff4757;
+            transition: all 0.3s ease;
+        }
+
+        .pic-slot.has-image .pic-remove {
+            display: flex;
+        }
+
+        .pic-remove:hover {
+            background: #ff4757;
+            color: white;
+        }
+
+        .continue-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .continue-btn.enabled {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .continue-btn.enabled:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .pics-counter {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 16px;
+        }
+
+        .pics-counter.valid {
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <script src="https://unpkg.com/jwt-decode@3.1.2/build/jwt-decode.js"></script>
+    <div class="background-animation">
+        <div class="floating-shapes">
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+    </div>
+
+    <div class="pics-container">
+        <h1 class="pics-title">Add Your Recent Pics</h1>
+        <p class="pics-subtitle">Show your best self! Upload at least 2 photos to continue.</p>
+        
+        <div class="pics-counter" id="picsCounter">0 of 6 photos added (minimum 2 required)</div>
+        
+        <div class="pics-grid">
+            <div class="pic-slot" data-slot="0">
+                <input type="file" accept="image/*" onchange="handleImageUpload(this, 0)">
+                <div class="pic-placeholder">📷</div>
+                <div class="pic-text">Add Photo</div>
+                <button class="pic-remove" onclick="removeImage(0)">×</button>
+            </div>
+            <div class="pic-slot" data-slot="1">
+                <input type="file" accept="image/*" onchange="handleImageUpload(this, 1)">
+                <div class="pic-placeholder">📷</div>
+                <div class="pic-text">Add Photo</div>
+                <button class="pic-remove" onclick="removeImage(1)">×</button>
+            </div>
+            <div class="pic-slot" data-slot="2">
+                <input type="file" accept="image/*" onchange="handleImageUpload(this, 2)">
+                <div class="pic-placeholder">📷</div>
+                <div class="pic-text">Add Photo</div>
+                <button class="pic-remove" onclick="removeImage(2)">×</button>
+            </div>
+            <div class="pic-slot" data-slot="3">
+                <input type="file" accept="image/*" onchange="handleImageUpload(this, 3)">
+                <div class="pic-placeholder">📷</div>
+                <div class="pic-text">Add Photo</div>
+                <button class="pic-remove" onclick="removeImage(3)">×</button>
+            </div>
+            <div class="pic-slot" data-slot="4">
+                <input type="file" accept="image/*" onchange="handleImageUpload(this, 4)">
+                <div class="pic-placeholder">📷</div>
+                <div class="pic-text">Add Photo</div>
+                <button class="pic-remove" onclick="removeImage(4)">×</button>
+            </div>
+            <div class="pic-slot" data-slot="5">
+                <input type="file" accept="image/*" onchange="handleImageUpload(this, 5)">
+                <div class="pic-placeholder">📷</div>
+                <div class="pic-text">Add Photo</div>
+                <button class="pic-remove" onclick="removeImage(5)">×</button>
+            </div>
+        </div>
+
+        <button type="button" class="continue-btn" id="continueBtn">Continue</button>
+    </div>
+
+    <script>
+        let uploadedImages = {};
+        let imageCount = 0;
+        const continueBtn = document.getElementById('continueBtn');
+        const picsCounter = document.getElementById('picsCounter');
+
+        function handleImageUpload(input, slotIndex) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file');
+                input.value = '';
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image size must be less than 5MB');
+                input.value = '';
+                return;
+            }
+
+            const slot = document.querySelector(`[data-slot="${slotIndex}"]`);
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                // Create image element
+                let img = slot.querySelector('img');
+                if (!img) {
+                    img = document.createElement('img');
+                    slot.appendChild(img);
+                    
+                    // Hide placeholder elements
+                    slot.querySelector('.pic-placeholder').style.display = 'none';
+                    slot.querySelector('.pic-text').style.display = 'none';
+                }
+
+                img.src = e.target.result;
+                slot.classList.add('has-image');
+
+                // Store image data
+                if (!uploadedImages[slotIndex]) {
+                    imageCount++;
+                }
+                uploadedImages[slotIndex] = {
+                    file: file,
+                    dataUrl: e.target.result
+                };
+
+                updateUI();
+            };
+
+            reader.readAsDataURL(file); // Starts the reading process for this file
+        }
+
+        function removeImage(slotIndex) {
+            const slot = document.querySelector(`[data-slot="${slotIndex}"]`);
+            const img = slot.querySelector('img');
+            const input = slot.querySelector('input[type="file"]');
+
+            if (img) {
+                img.remove();
+            }
+
+            // Show placeholder elements
+            slot.querySelector('.pic-placeholder').style.display = 'block';
+            slot.querySelector('.pic-text').style.display = 'block';
+            slot.classList.remove('has-image');
+
+            // Clear input and data
+            input.value = '';
+            if (uploadedImages[slotIndex]) {
+                delete uploadedImages[slotIndex];
+                imageCount--;
+            }
+
+            updateUI();
+        }
+
+        function updateUI() {
+            // Update counter
+            picsCounter.textContent = `${imageCount} of 6 photos added (minimum 2 required)`;
+            
+            if (imageCount >= 2) {
+                picsCounter.classList.add('valid');
+                continueBtn.classList.add('enabled');
+            } else {
+                picsCounter.classList.remove('valid');
+                continueBtn.classList.remove('enabled');
+            }
+        }
+
+        // Handle continue button click
+        continueBtn.addEventListener('click', async function() {
+            if (imageCount < 2) {
+                alert('Please add at least 2 photos to continue');
+                return;
+            }
+
+            try {
+                // Get auth token and user email
+                const authData = JSON.parse(localStorage.getItem('auth'));
+                const token = authData.token;
+                const decodedToken = jwt_decode(token);
+                const email = decodedToken.sub;
+
+                // Create FormData to send files
+                const formData = new FormData();
+                formData.append('email', email);
+
+                // Add all uploaded images to FormData
+                Object.keys(uploadedImages).forEach(key => {
+                    formData.append('photos', uploadedImages[key].file);
+                });
+
+                // Send to Java backend
+                const response = await fetch('/api/signup/pics', {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert(`${imageCount} photos uploaded successfully!`);
+                    // Redirect to next page or completion
+                    window.location.href = '../index.html'; // Adjust as needed
+                } else {
+                    const errorData = await response.json();
+                    alert('Failed to upload photos: ' + (errorData.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error uploading photos:', error);
+                alert('Network error. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>

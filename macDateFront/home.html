@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MacDate - Home</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo h1 {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .main-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 80px);
+            padding: 20px;
+        }
+
+        .swipe-container {
+            position: relative;
+            width: 350px;
+            height: 600px;
+            perspective: 1000px;
+        }
+
+        .card {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: grab;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            background: white;
+        }
+
+        .card:active {
+            cursor: grabbing;
+        }
+
+        .card.dragging {
+            transition: none;
+        }
+
+        .card-image-container {
+            position: relative;
+            width: 100%;
+            height: 70%;
+            overflow: hidden;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card-image.active {
+            opacity: 1;
+        }
+
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-nav {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            gap: 4px;
+            z-index: 10;
+        }
+
+        .nav-dot {
+            flex: 1;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 2px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background: white;
+        }
+
+        .nav-arrows {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .nav-arrow {
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .nav-arrow:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .profile-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            font-size: 4rem;
+            color: white;
+            font-weight: 300;
+        }
+
+        .card-info {
+            padding: 20px;
+            height: 30%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .card-details {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .tag {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .action-buttons {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+
+        .action-btn {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .reject-btn {
+            background: #ff4458;
+            color: white;
+        }
+
+        .super-like-btn {
+            background: #42cff5;
+            color: white;
+        }
+
+        .like-btn {
+            background: #42dca3;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .action-btn.swipe-feedback {
+            animation: buttonPulse 0.4s ease-out;
+        }
+
+        @keyframes buttonPulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.5);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .no-more-cards {
+            display: none;
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        /* Card stack effect */
+        .card:nth-child(1) { z-index: 5; transform: scale(1) rotate(0deg); }
+        .card:nth-child(2) { z-index: 4; transform: scale(0.95) rotate(1deg) translateY(10px); }
+        .card:nth-child(3) { z-index: 3; transform: scale(0.90) rotate(-1deg) translateY(20px); }
+        .card:nth-child(4) { z-index: 2; transform: scale(0.85) rotate(0.5deg) translateY(30px); opacity: 0.8; }
+        .card:nth-child(5) { z-index: 1; transform: scale(0.80) rotate(-0.5deg) translateY(40px); opacity: 0.6; }
+
+        /* Swipe animations */
+        .card.swiped-left {
+            transform: translateX(-100vw) rotate(-30deg);
+            opacity: 0;
+        }
+
+        .card.swiped-right {
+            transform: translateX(100vw) rotate(30deg);
+            opacity: 0;
+        }
+
+        .card.swiped-up {
+            transform: translateY(-100vh) scale(0.8);
+            opacity: 0;
+        }
+
+        @media (max-width: 480px) {
+            .swipe-container {
+                width: 90vw;
+                max-width: 320px;
+                height: 550px;
+            }
+
+            .action-buttons {
+                bottom: 20px;
+                gap: 15px;
+            }
+
+            .action-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.3rem;
+            }
+
+            .nav-arrow {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <h1>MacDate</h1>
+        </div>
+        <div class="header-actions">
+            <button class="icon-btn" title="Messages">💬</button>
+            <button class="icon-btn" title="Profile">👤</button>
+            <button class="icon-btn" title="Settings">⚙️</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="swipe-container" id="swipeContainer">
+            <!-- Cards will be dynamically loaded here -->
+        </div>
+
+        <div class="no-more-cards" id="noMoreCards">
+            <h2>No more profiles!</h2>
+            <p>Check back later for new matches</p>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+        <button class="action-btn reject-btn" onclick="swipeCard('left')" title="Pass">❌</button>
+        <button class="action-btn super-like-btn" onclick="swipeCard('up')" title="Super Like">⭐</button>
+        <button class="action-btn like-btn" onclick="swipeCard('right')" title="Like">❤️</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+
+    <script>
+        let currentCardIndex = 0;
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let currentX = 0;
+        let currentY = 0;
+        let cards = []; // Will be populated after loading data
+
+        document.querySelector('.icon-btn[title="Messages"]').addEventListener('click', () => {
+            window.location.href = 'messages.html';
+        });
+      
+        document.addEventListener("DOMContentLoaded", async () => {
+            const container = document.getElementById("swipeContainer");
+
+            try {
+            
+                const authData = JSON.parse(localStorage.getItem('auth'));
+                if (!authData || !authData.token) {
+                    throw new Error('No authentication token found');
+                }
+                
+                const token = authData.token;
+                const decodedToken = jwt_decode(token);
+                const email = decodedToken.sub;
+
+                const response = await fetch('/api/home/load', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+         
+                
+                // Build HTML for all users
+                let htmlString = '';
+                data.forEach((user, userIndex) => {
+
+                    htmlString += `
+                        <div class="card" data-email="${user.email}" data-photo-urls='${JSON.stringify(user.photoUrls || [])}' data-profile="${userIndex}">
+                            <div class="card-image-container">
+                                <!-- Navigation dots -->
+                                <div class="image-nav">`;
+                    
+                    // Create dots for each photo
+                    const photoCount = user.photoUrls ? user.photoUrls.length : 1;
+                    for (let i = 0; i < Math.min(photoCount, 6); i++) {
+                        htmlString += `<div class="nav-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></div>`;
+                    }
+                    
+                    htmlString += `</div>
+                                <!-- Navigation arrows -->
+                                <div class="nav-arrows">
+                                    <button class="nav-arrow prev-btn">‹</button>
+                                    <button class="nav-arrow next-btn">›</button>
+                                </div>
+
+                                <!-- Image slides -->`;
+                    
+                    // Create image slides
+                    if (user.photoUrls && user.photoUrls.length > 0) {
+                        user.photoUrls.slice(0, 6).forEach((photoURL, photoIndex) => {
+                            htmlString += `
+                                <div class="card-image ${photoIndex === 0 ? 'active' : ''}">
+                                    <img src="${photoURL}" alt="${user.username}'s photo ${photoIndex + 1}" onerror="this.parentNode.innerHTML='<div class=\\'profile-placeholder\\'>📷</div>'">
+                                </div>`;
+                        });
+                    } else {
+                        // Fallback placeholder
+                        htmlString += `
+                            <div class="card-image active">
+                                <div class="profile-placeholder">👤</div>
+                            </div>`;
+                    }
+                    
+                    htmlString += `
+                            </div>
+                            <div class="card-info">
+                                <div class="card-name">${user.username}, ${user.age}</div>
+                            </div>
+                        </div>`;
+                });
+
+                
+                container.innerHTML = htmlString;
+                
+                // Re-query cards after loading
+                cards = document.querySelectorAll('.card');
+                
+                // Initialize card functionality
+                initializeCards();
+
+            } catch (error) {
+                console.error("Error fetching users:", error);
+                container.innerHTML = `
+                    <div style="color: white; text-align: center; padding: 20px;">
+                        <h3>Failed to load profiles</h3>
+                        <p>Please check your connection and try again</p>
+                    </div>`;
+            }
+        });
+
+        function initializeCards() {
+            // Initialize image navigation for each card
+            cards.forEach((card, cardIndex) => {
+                let currentImageIndex = 0;
+                const images = card.querySelectorAll('.card-image');
+                const navDots = card.querySelectorAll('.nav-dot');
+                const prevBtn = card.querySelector('.prev-btn');
+                const nextBtn = card.querySelector('.next-btn');
+
+                function showImage(index) {
+                    images.forEach(img => img.classList.remove('active'));
+                    navDots.forEach(dot => dot.classList.remove('active'));
+
+                    if (images[index] && navDots[index]) {
+                        images[index].classList.add('active');
+                        navDots[index].classList.add('active');
+                        currentImageIndex = index;
+                    }
+                }
+
+                function nextImage() {
+                    const nextIndex = (currentImageIndex + 1) % images.length;
+                    showImage(nextIndex);
+                }
+
+                function prevImage() {
+                    const prevIndex = (currentImageIndex - 1 + images.length) % images.length;
+                    showImage(prevIndex);
+                }
+
+                // Event listeners for navigation
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        nextImage();
+                    });
+                }
+
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        prevImage();
+                    });
+                }
+
+                // Dot navigation
+                navDots.forEach((dot, index) => {
+                    dot.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        showImage(index);
+                    });
+                });
+
+                // Touch/swipe support for image navigation
+                let imageStartX = 0;
+                let imageEndX = 0;
+
+                const imageContainer = card.querySelector('.card-image-container');
+                if (imageContainer) {
+                    imageContainer.addEventListener('touchstart', (e) => {
+                        imageStartX = e.touches[0].clientX;
+                    });
+
+                    imageContainer.addEventListener('touchend', (e) => {
+                        imageEndX = e.changedTouches[0].clientX;
+                        handleImageSwipe();
+                    });
+
+                    function handleImageSwipe() {
+                        const swipeThreshold = 30;
+                        const diff = imageStartX - imageEndX;
+
+                        if (Math.abs(diff) > swipeThreshold) {
+                            if (diff > 0) {
+                                nextImage();
+                            } else {
+                                prevImage();
+                            }
+                        }
+                    }
+                }
+
+                // Card swiping events
+                card.addEventListener('mousedown', startDrag);
+                card.addEventListener('mousemove', drag);
+                card.addEventListener('mouseup', endDrag);
+                card.addEventListener('mouseleave', endDrag);
+
+                card.addEventListener('touchstart', startDrag);
+                card.addEventListener('touchmove', drag);
+                card.addEventListener('touchend', endDrag);
+            });
+
+            // Initialize card stack
+            updateCardStack();
+        }
+
+        function startDrag(e) {
+            if (e.target.closest('.nav-arrow') || e.target.closest('.nav-dot')) return;
+            if (e.target.closest('.card').dataset.profile != cards[currentCardIndex].dataset.profile) return;
+            
+            isDragging = true;
+            const clientX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
+            const clientY = e.type === 'mousedown' ? e.clientY : e.touches[0].clientY;
+            
+            startX = clientX;
+            startY = clientY;
+            
+            cards[currentCardIndex].classList.add('dragging');
+            e.preventDefault();
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            if (e.target.closest('.card').dataset.profile != cards[currentCardIndex].dataset.profile) return;
+
+            const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
+            const clientY = e.type === 'mousemove' ? e.clientY : e.touches[0].clientY;
+            
+            currentX = clientX - startX;
+            currentY = clientY - startY;
+
+            const rotation = currentX * 0.1;
+            const opacity = 1 - Math.abs(currentX) / 300;
+
+            cards[currentCardIndex].style.transform = `translate(${currentX}px, ${currentY}px) rotate(${rotation}deg)`;
+            cards[currentCardIndex].style.opacity = Math.max(opacity, 0.5);
+
+            e.preventDefault();
+        }
+
+        function endDrag(e) {
+            if (!isDragging) return;
+            
+            isDragging = false;
+            if (cards[currentCardIndex]) {
+                cards[currentCardIndex].classList.remove('dragging');
+            }
+
+            const threshold = 100;
+            const velocityThreshold = 50;
+
+            if (Math.abs(currentX) > threshold || Math.abs(currentX) > velocityThreshold) {
+                if (currentX > 0) {
+                    swipeCard('right');
+                } else {
+                    swipeCard('left');
+                }
+            } else if (currentY < -threshold) {
+                swipeCard('up');
+            } else {
+                // Snap back
+                if (cards[currentCardIndex]) {
+                    cards[currentCardIndex].style.transform = '';
+                    cards[currentCardIndex].style.opacity = '';
+                }
+            }
+
+            currentX = 0;
+            currentY = 0;
+        }
+
+        async function swipeCard(direction) {
+            if (currentCardIndex >= cards.length) return;
+
+            const container = document.getElementById("swipeContainer");
+
+            const currentCard = cards[currentCardIndex];
+            
+            // Animate corresponding action button
+            const rejectBtn = document.querySelector('.reject-btn');
+            const likeBtn = document.querySelector('.like-btn');
+            const superLikeBtn = document.querySelector('.super-like-btn');
+            
+            if (direction === 'right') {
+                likeBtn.classList.add('swipe-feedback');
+                setTimeout(() => likeBtn.classList.remove('swipe-feedback'), 400);
+            } else if (direction === 'left') {
+                rejectBtn.classList.add('swipe-feedback');
+                setTimeout(() => rejectBtn.classList.remove('swipe-feedback'), 400);
+            } else if (direction === 'up') {
+                superLikeBtn.classList.add('swipe-feedback');
+                setTimeout(() => superLikeBtn.classList.remove('swipe-feedback'), 400);
+            }
+            
+            // Add swipe animation class
+            if (direction === 'left') {
+                currentCard.classList.add('swiped-left');
+            } else if (direction === 'right') {
+                currentCard.classList.add('swiped-right');
+            } else if (direction === 'up') {
+                currentCard.classList.add('swiped-up');
+            }
+
+            let liked;
+            if(direction == 'right' || direction == 'up'){
+                liked = true;
+            }
+            else if(direction == 'left'){
+                liked = false;
+            }
+
+            // Move to next card
+            setTimeout(() => {
+                currentCard.style.display = 'none';
+                currentCardIndex++;
+                
+                // Update remaining cards positions
+                updateCardStack();
+                
+                // Check if no more cards
+                if (currentCardIndex >= cards.length) {
+                    document.getElementById('swipeContainer').style.display = 'none';
+                    document.getElementById('noMoreCards').style.display = 'block';
+                }
+            }, 300);
+
+            const swipeeEmail = currentCard.dataset.email;
+
+            console.log(currentCard.dataset.photoUrls);
+
+            try{
+                const authData = JSON.parse(localStorage.getItem('auth'));
+
+                if (!authData || !authData.token) {
+                    throw new Error('No authentication token found');
+                }
+                
+                const token = authData.token;
+                const decodedToken = jwt_decode(token);
+                const swiperEmail = decodedToken.sub;
+
+                const response = await fetch('/api/home/swipe', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            swiperEmail: swiperEmail,
+                            swipeeEmail: swipeeEmail,
+                            liked: liked
+                        })
+                    });
+                    
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                    
+                const data = await response.text();
+
+                if(data == 'Matched'){
+                    const swipeeName = currentCard.querySelector('.card-name').innerText.split(',')[0].trim();
+                    const swipeeAge = currentCard.querySelector('.card-name').innerText.split(',')[1].trim();
+                    const swipeePhotos = JSON.parse(currentCard.dataset.photoUrls);
+                    localStorage.setItem('swipeeName', swipeeName);
+                    localStorage.setItem('swipeeAge', swipeeAge);
+                    localStorage.setItem('swipeePhotos', JSON.stringify(swipeePhotos));
+                    window.location.href = 'match.html';
+                }
+  
+            }
+            catch (error) {
+                console.error("Error updating swipes:", error);
+                container.innerHTML = `
+                    <div style="color: white; text-align: center; padding: 20px;">
+                        <h3>Error updating swipes</h3>
+                        <p>Please check your connection and try again</p>
+                    </div>`;
+            }
+
+        }
+
+        function updateCardStack() {
+            cards.forEach((card, index) => {
+                if (index >= currentCardIndex) {
+                    const stackPosition = index - currentCardIndex;
+                    if (stackPosition < 5) {
+                        const scale = 1 - (stackPosition * 0.05);
+                        const translateY = stackPosition * 10;
+                        const rotation = (Math.random() - 0.5) * 2;
+                        const opacity = 1 - (stackPosition * 0.2);
+                        
+                        card.style.transform = `scale(${scale}) rotate(${rotation}deg) translateY(${translateY}px)`;
+                        card.style.opacity = Math.max(opacity, 0.6);
+                        card.style.zIndex = 5 - stackPosition;
+                    }
+                }
+            });
+        }
+
+        // Header button functionality (placeholder)
+        document.querySelectorAll('.icon-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const title = e.target.getAttribute('title');
+                console.log(`${title} clicked - implement navigation logic here`);
+            });
+        });
+    </script>
+</body>
+</html>

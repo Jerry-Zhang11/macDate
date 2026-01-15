@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+<div class="background-animation">
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+</div>
+
+<div class="auth-container">
+    <div class="logo">
+        <h1>MacDate</h1>
+        <p>Welcome back</p>
+    </div>
+
+    <div class="auth-toggle">
+        <div class="toggle-slider" id="toggleSlider"></div>
+        <button class="toggle-btn active" id="signinToggle">Sign In</button>
+        <button class="toggle-btn" id="signupToggle">Sign Up</button>
+    </div>
+
+    <div class="form-container" id="signinForm">
+        <form>
+            <div class="form-group">
+                <label for="signin-email">Email</label>
+                <input type="email" id="signin-email" placeholder="Enter your email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="signin-password">Password</label>
+                <input type="password" id="signin-password" placeholder="Enter your password" required>
+                <button type="button" class="password-toggle" onclick="togglePassword('signin-password', this)">👁️</button>
+            </div>
+
+            <button type="submit" class="auth-btn">Sign In</button>
+        </form>
+
+
+
+        <div class="forgot-password">
+            <a href="#">Forgot your password?</a>
+        </div>
+    </div>
+
+    <div class="form-container hidden" id="signupForm">
+        <form>
+            <div class="form-group">
+                <label for="signup-name">First Name</label>
+                <input type="text" id="signup-name" placeholder="Enter your full name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="signup-email">Email</label>
+                <input type="email" id="signup-email" placeholder="Enter your email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="signup-password">Password</label>
+                <input type="password" id="signup-password" placeholder="Create a password" required>
+                <button type="button" class="password-toggle" onclick="togglePassword('signup-password', this)">👁️</button>
+            </div>
+
+            <div class="form-group">
+                <label for="signup-confirm">Confirm Password</label>
+                <input type="password" id="signup-confirm" placeholder="Confirm your password" required>
+                <button type="button" class="password-toggle" onclick="togglePassword('signup-confirm', this)">👁️</button>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="terms" required>
+                <label for="terms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
+            </div>
+
+            <button type="submit" class="auth-btn">Create Account</button>
+        </form>
+
+
+    </div>
+</div>
+<script src="script/index.js"></script>
+</body>
+</html>

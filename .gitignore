@@ -1,0 +1,11 @@
+# Java / Spring
+target/
+*.log
+
+# Env / secrets
+.env
+application.properties
+application.yml
+
+# OS junk
+.DS_Store

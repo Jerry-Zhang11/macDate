@@ -1,0 +1,183 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday - MacDate</title>
+    <link rel="stylesheet" href="../css/index.css">
+    <style>
+        .birthday-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 420px;
+            max-width: 90vw;
+            padding: 40px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .birthday-title {
+            font-size: 3em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 32px;
+        }
+
+        .birthday-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 1.2em;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: white;
+            margin-bottom: 24px;
+        }
+
+        .birthday-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .continue-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .continue-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="background-animation">
+        <div class="floating-shapes">
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+    </div>
+
+    <div class="birthday-container">
+        <h1 class="birthday-title">Your Birthday?</h1>
+        
+        <form id="birthdayForm">
+            <input 
+                type="text" 
+                id="birthday" 
+                class="birthday-input" 
+                placeholder="YYYY/MM/DD" 
+                pattern="\d{4}/\d{2}/\d{2}"
+                maxlength="10"
+                required
+            >
+            <button type="submit" class="continue-btn">Continue</button>
+        </form>
+    </div>
+
+    <script src="https://unpkg.com/jwt-decode@3.1.2/build/jwt-decode.js">
+</script>
+    <script>
+        // Format input as user types
+        document.getElementById('birthday').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+            
+            if (value.length >= 4) {
+                value = value.substring(0, 4) + '/' + value.substring(4);
+            }
+            if (value.length >= 7) {
+                value = value.substring(0, 7) + '/' + value.substring(7);
+            }
+            if (value.length > 10) {
+                value = value.substring(0, 10);
+            }
+            
+            e.target.value = value;
+        });
+
+        // Handle form submission
+        document.getElementById('birthdayForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            try{
+            
+                const birthday = document.getElementById('birthday').value;
+                
+                // Validate date format
+                const dateRegex = /^\d{4}\/\d{2}\/\d{2}$/;
+                if (!dateRegex.test(birthday)) {
+                    alert('Please enter your birthday in YYYY/MM/DD format');
+                    return;
+                }
+                
+                // Validate if it's a real date
+                const [year, month, day] = birthday.split('/').map(Number);
+                const date = new Date(year, month - 1, day);
+                
+                if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+                    alert('Please enter a valid date');
+                    return;
+                }
+            
+                const authData = JSON.parse(localStorage.getItem('auth'));
+                const token = authData.token;
+                const decodedToken = jwt_decode(token);
+                const email = decodedToken.sub;
+                
+                const today = new Date();
+    
+                let age = today.getFullYear() - date.getFullYear();
+                const monthDiff = today.getMonth() - date.getMonth();
+    
+                // Adjust if birthday hasn't occurred this year yet
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate()))                 {age--;}
+
+                console.log(age);
+                
+                const response = await fetch('/api/signup/age', {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        age: age
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Age saved successfully!');
+                    // Redirect to next step
+                    window.location.href = 'orientation.html';
+                } else {
+                    const errorData = await response.json();
+                    alert('Failed to save age: ' + (errorData.message || 'Unknown error'));
+                
+            }}catch (error) {
+                    console.error('Error saving age:', error);
+                    alert('Network error. Please try again.');
+                }
+            
+          
+        });
+    </script>
+</body>
+</html>

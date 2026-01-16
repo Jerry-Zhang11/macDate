@@ -1,0 +1,87 @@
+name: Deploy macDate (Simple)
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ---- Build backend jar ----
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"   # change to 17 if your project uses Java 17
+
+      - name: Build jar
+        run: mvn -B -DskipTests package
+
+      # ---- Upload jar to EC2 home dir ----
+      - name: Upload jar to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
+          source: "target/*.jar"
+          target: "/home/ec2-user/"
+          strip_components: 1
+
+      # ---- Upload frontend to EC2 (staging area) ----
+      - name: Upload frontend to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
+          source: "frontend/**"
+          target: "/home/ec2-user/frontend"
+          strip_components: 1
+
+      # ---- Deploy + restart ----
+      - name: Deploy on EC2 (swap jar, sync frontend to nginx root, restart)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
+          script: |
+            set -euo pipefail
+
+            echo "=== BACKEND: replace jar ==="
+            # Find the uploaded jar (avoid picking the current macdate.jar)
+            NEW_JAR="$(ls -1 /home/ec2-user/*.jar | grep -v '^/home/ec2-user/macdate\.jar$' | head -n 1 || true)"
+
+            if [ -z "${NEW_JAR}" ]; then
+              echo "ERROR: Could not find newly uploaded jar in /home/ec2-user/"
+              ls -la /home/ec2-user/*.jar || true
+              exit 1
+            fi
+
+            echo "New jar: ${NEW_JAR}"
+
+            # Backup current jar (optional but nice)
+            if [ -f /home/ec2-user/macdate.jar ]; then
+              cp /home/ec2-user/macdate.jar "/home/ec2-user/macdate-$(date +%Y%m%d-%H%M%S).jar"
+            fi
+
+            # Replace jar the service uses
+            mv "${NEW_JAR}" /home/ec2-user/macdate.jar
+
+            echo "=== FRONTEND: sync to nginx root ==="
+            # Nginx serves from /usr/share/nginx/html (you confirmed this)
+            # Copy your uploaded frontend (staging) into nginx's live folder
+            sudo rsync -a --delete /home/ec2-user/frontend/ /usr/share/nginx/html/
+
+            echo "=== RESTART SERVICE ==="
+            sudo systemctl restart macdate.service
+            sudo systemctl --no-pager status macdate.service | head -n 40

@@ -17,9 +17,10 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "21"   # change to 17 if your project uses Java 17
+          java-version: "17"   # change to 17 if your project uses Java 17
 
       - name: Build jar
+	working-directory: macDateBackend
         run: mvn -B -DskipTests package
 
       # ---- Upload jar to EC2 home dir ----
@@ -30,9 +31,9 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT || 22 }}
-          source: "target/*.jar"
+          source: "target/*SNAPSHOT.jar"
           target: "/home/ec2-user/"
-          strip_components: 1
+          strip_components: 2
 
       # ---- Upload frontend to EC2 (staging area) ----
       - name: Upload frontend to EC2
@@ -42,7 +43,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT || 22 }}
-          source: "frontend/**"
+          source: "macDateFront/**"
           target: "/home/ec2-user/frontend"
           strip_components: 1
 
@@ -69,7 +70,7 @@ jobs:
 
             echo "New jar: ${NEW_JAR}"
 
-            # Backup current jar (optional but nice)
+            # Backup current jar
             if [ -f /home/ec2-user/macdate.jar ]; then
               cp /home/ec2-user/macdate.jar "/home/ec2-user/macdate-$(date +%Y%m%d-%H%M%S).jar"
             fi

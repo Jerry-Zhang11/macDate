@@ -76,7 +76,7 @@ document.querySelector('#signinForm form').addEventListener('submit', async func
             }
         }
         else if(response.status === 401){
-            alert(data.messsage || 'Wrong Email or Password');
+            alert(data.messsage || 'Incorrect Email or Password');
         }
         else if (response.status === 403){
             alert("Account not verified");

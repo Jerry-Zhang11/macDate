@@ -20,7 +20,7 @@ jobs:
           java-version: "17"   # change to 17 if your project uses Java 17
 
       - name: Build jar
-	working-directory: macDateBackend
+        working-directory: macDateBackend
         run: mvn -B -DskipTests package
 
       # ---- Upload jar to EC2 home dir ----
